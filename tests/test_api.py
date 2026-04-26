@@ -14,7 +14,11 @@ def test_fake_job():
         "description": "No experience needed, contact via WhatsApp",
         "requirements": ""
     })
+    data = res.json()
+
     assert res.status_code == 200
+    assert "verdict" in data
+    assert "confidence" in data
 
 def test_real_job():
     res = client.post("/predict", json={
@@ -22,7 +26,10 @@ def test_real_job():
         "description": "Python developer role",
         "requirements": ""
     })
+    data = res.json()
+
     assert res.status_code == 200
+    assert "verdict" in data
 
 def test_health():
     res = client.get("/health")
