@@ -1,11 +1,11 @@
-![CI](https://github.com/YOUR_USERNAME/securehire-backend/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/akshyadv2006/securehire-backend/actions/workflows/ci.yml/badge.svg)
 
 # SecureHire 🔍
 
 Detect fake job postings using Machine Learning.
 
 ## 🚀 Live API
-https://your-render-url.onrender.com
+https://securehire-api.onrender.com
 
 ## 🧠 Features
 - Fake job detection
