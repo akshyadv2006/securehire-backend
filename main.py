@@ -47,12 +47,13 @@ app.add_middleware(
 )
 
 # -------------------------
-# Request schema
+# Request schema (UPDATED)
 # -------------------------
 class JobPost(BaseModel):
     title: str
     description: str
     requirements: str = ""
+    salary: str = ""   # ✅ NEW FIELD
 
 # -------------------------
 # Health check
@@ -62,32 +63,46 @@ def health():
     return {"status": "ok"}
 
 # -------------------------
-# Feature extraction (IMPROVED)
+# Feature extraction (FIXED)
 # -------------------------
 def extract_features(text):
+    text_lower = text.lower()
+
     return {
-        # better salary detection
-        "has_salary": int(bool(re.search(r"(₹|\$|salary|lpa|per annum)", text, re.I))),
-
-        # urgency / scam signals
-        "urgency_words": len(re.findall(
-            r'\b(urgent|immediately|asap|earn|quick money)\b', text, re.I
-        )),
-
-        # suspicious emails
-        "generic_email": int(bool(re.search(
-            r'@gmail|@yahoo|@hotmail', text, re.I
+        # ✅ IMPROVED salary detection
+        "has_salary": int(bool(re.search(
+            r"(₹|\$|lpa|ctc|per annum|lakhs|salary)",
+            text_lower
         ))),
 
-        # extra scam patterns
+        "urgency_words": len(re.findall(
+            r'\b(urgent|immediately|asap|earn|quick money)\b',
+            text_lower
+        )),
+
+        "generic_email": int(bool(re.search(
+            r'@gmail|@yahoo|@hotmail',
+            text_lower
+        ))),
+
         "suspicious_phrases": int(bool(re.search(
-            r'no experience|work from home|easy money|earn fast',
-            text, re.I
+            r'no experience|work from home|easy money|earn fast|no interview',
+            text_lower
+        ))),
+
+        "has_contact": int(bool(re.search(
+            r'whatsapp|telegram|call now|contact us',
+            text_lower
+        ))),
+
+        "too_good_salary": int(bool(re.search(
+            r'earn \d{5,}|salary \d{5,}',
+            text_lower
         )))
     }
 
 # -------------------------
-# Reason generator (FIXED)
+# Reason generator (IMPROVED)
 # -------------------------
 def get_reasons(features):
     reasons = []
@@ -104,14 +119,19 @@ def get_reasons(features):
     if features["suspicious_phrases"] == 1:
         reasons.append("Contains suspicious phrases")
 
-    # 🔥 IMPORTANT: fallback
+    if features["has_contact"] == 1:
+        reasons.append("Asks to contact directly (WhatsApp/Telegram)")
+
+    if features["too_good_salary"] == 1:
+        reasons.append("Unrealistically high salary mentioned")
+
     if len(reasons) == 0:
         reasons.append("No strong risk signals detected")
 
     return reasons
 
 # -------------------------
-# Predict endpoint
+# Predict endpoint (FIXED)
 # -------------------------
 @app.post("/predict")
 def predict(job: JobPost):
@@ -119,7 +139,10 @@ def predict(job: JobPost):
     if pipeline is None:
         return {"error": "Pipeline not loaded properly"}
 
-    text = job.title + " " + job.description + " " + job.requirements
+    # ✅ INCLUDE salary in model input
+    text = f"{job.title} {job.description} {job.requirements} {job.salary}"
+
+    print("🔍 INPUT TEXT:", text[:200])  # debug
 
     prob = pipeline.predict_proba([text])[0][1]
 
@@ -136,6 +159,6 @@ def predict(job: JobPost):
     return {
         "verdict": verdict,
         "confidence": round(float(prob), 3),
-        "reasons": reasons,      
+        "reasons": reasons,
         "features": features
     }
