@@ -25,7 +25,7 @@ function isJobPage(title, desc) {
   return desc.length > 100 && (strong >= 1 || weak >= 2);
 }
 
-// 🔥 CONTEXT CHECK (to avoid login pages)
+// 🔥 CONTEXT CHECK
 function isLikelyJobContext(title, desc) {
   const text = (title + " " + desc).toLowerCase();
 
@@ -66,7 +66,7 @@ async function runSecureHire() {
   console.log("🧠 TITLE:", title);
   console.log("🧠 DESC LENGTH:", desc.length);
 
-  // 🔥 JOB CHECK
+  // ❌ NOT A JOB PAGE
   if (!title || !isJobPage(title, desc)) {
     console.log("❌ Not a job page");
 
@@ -94,6 +94,28 @@ async function runSecureHire() {
     return;
   }
 
+  // 🔥 SALARY EXTRACTION (FIXED)
+  let salaryText = "";
+
+  const salaryElement =
+    document.querySelector("[class*='salary']") ||
+    document.querySelector("[class*='Salary']");
+
+  if (salaryElement) {
+    salaryText = salaryElement.innerText;
+  }
+
+  // 🔥 fallback detection
+  if (!salaryText) {
+  const body = document.body.innerText.toLowerCase();
+
+  if (body.includes("lpa") || body.includes("₹") || body.includes("ctc")) {
+    salaryText = "₹ salary mentioned";
+  }
+}
+
+  console.log("💰 SALARY:", salaryText);
+
   // 🔹 LOADING
   const loading = document.createElement("div");
   loading.id = "securehire-loading";
@@ -110,14 +132,15 @@ async function runSecureHire() {
   `;
   document.body.appendChild(loading);
 
-  // 🔥 CALL BACKEND
+  // 🔥 CALL BACKEND (UPDATED PAYLOAD)
   chrome.runtime.sendMessage(
     {
       action: "predict",
       payload: {
         title,
         description: desc,
-        requirements: ""
+        requirements: "",
+        salary: salaryText   // ✅ FIXED
       }
     },
     (data) => {
@@ -132,7 +155,6 @@ async function runSecureHire() {
       const risk = (data.confidence * 100).toFixed(0);
       const real = ((1 - data.confidence) * 100).toFixed(0);
 
-      // 🔥 ADD REASONS
       const reasonsText = data.reasons && data.reasons.length
         ? "\n\nReasons:\n• " + data.reasons.join("\n• ")
         : "";

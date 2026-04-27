@@ -71,7 +71,7 @@ def extract_features(text):
     return {
         # ✅ IMPROVED salary detection
         "has_salary": int(bool(re.search(
-            r"(₹|\$|lpa|ctc|per annum|lakhs|salary)",
+           r"(₹|\$|lpa|ctc|per annum|lakhs|salary)",
             text_lower
         ))),
 
