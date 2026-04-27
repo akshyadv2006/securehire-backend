@@ -113,8 +113,8 @@ def get_reasons(features):
     if features["generic_email"] == 1:
         reasons.append("Uses free email provider")
 
-    if features["has_salary"] == 0:
-        reasons.append("No clear salary mentioned")
+    # if features["has_salary"] == 0:
+    #     reasons.append("No clear salary mentioned")
 
     if features["suspicious_phrases"] == 1:
         reasons.append("Contains suspicious phrases")
