@@ -34,11 +34,8 @@ uvicorn main:app --reload
 ## 📊 Model
 TF-IDF + Logistic Regression + heuristic features
 
-## 🚀 Live API
-https://your-render-url.onrender.com
 
-## 🎥 Demo
-(Add GIF or video later)
+
 
 ## 🧠 Features
 - Detect fake job postings
